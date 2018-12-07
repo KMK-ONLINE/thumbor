@@ -32,6 +32,7 @@ space_image_path = get_abs_path(u'image%20space.jpg')
 invalid_quantization_image_path = get_abs_path(u'invalid_quantization.jpg')
 animated_image_path = get_abs_path(u'animated.gif')
 not_so_animated_image_path = get_abs_path(u'animated-one-frame.gif')
+problematic_one_frame_image_path = get_abs_path(u'problematic-one-frame.gif')
 
 
 def get_image(img):
@@ -86,3 +87,7 @@ def animated_image():
 
 def not_so_animated_image():
     return get_image(not_so_animated_image_path)
+
+
+def problematic_one_frame_image():
+    return get_image(problematic_one_frame_image_path)

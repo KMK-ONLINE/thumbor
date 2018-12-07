@@ -258,7 +258,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def after_transform(self):
         if self.context.request.extension == '.gif' and self.context.config.USE_GIFSICLE_ENGINE:
-            self.finish_request()
+            self.filters_runner.apply_max_bytes(thumbor.filters.PHASE_POST_TRANSFORM, self.finish_request)
         else:
             self.filters_runner.apply_filters(thumbor.filters.PHASE_POST_TRANSFORM, self.finish_request)
 
@@ -386,11 +386,15 @@ class BaseHandler(tornado.web.RequestHandler):
 
                 if result_last_modified:
                     if 'If-Modified-Since' in self.request.headers:
+                        logger.debug('LASTMODIFIED HEADER CHECKED')
                         date_modified_since = datetime.datetime.strptime(
                             self.request.headers['If-Modified-Since'], HTTP_DATE_FMT
                         ).replace(tzinfo=pytz.utc)
 
+                        logger.debug(date_modified_since)
+                        logger.debug(result_last_modified)
                         if result_last_modified <= date_modified_since:
+                            logger.debug('LASTMODIFIED SET STATUS')
                             self.set_status(304)
                             self.finish()
                             return
@@ -498,11 +502,15 @@ class BaseHandler(tornado.web.RequestHandler):
         return results
 
     def reload_to_fit_in_kb(self, engine, initial_results, extension, initial_quality, max_bytes):
-        if extension not in ['.webp', '.jpg', '.jpeg'] or len(initial_results) <= max_bytes:
+        if extension not in ['.webp', '.jpg', '.jpeg', '.gif'] or len(initial_results) <= max_bytes:
             return initial_results
 
         results = initial_results
         quality = initial_quality
+
+        if extension == '.gif':
+            engine.extract_cover()
+            return engine.read(extension, quality)
 
         while len(results) > max_bytes:
             quality = int(quality * 0.75)

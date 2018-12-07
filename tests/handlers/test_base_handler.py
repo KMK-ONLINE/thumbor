@@ -43,6 +43,7 @@ from tests.fixtures.images import (
     invalid_quantization,
     animated_image,
     not_so_animated_image,
+    problematic_one_frame_image,
 )
 
 
@@ -1256,6 +1257,18 @@ class ImageOperationsWithoutStorage(BaseImagingTestCase):
         response = self.fetch('/unsafe/filters:max_bytes(1000)/Giunchedi%2C_Filippo_January_2015_01.jpg')
         expect(response.code).to_equal(200)
         expect(len(response.body)).to_be_greater_than(1000)
+
+    def test_max_bytes_gif_first_frame(self):
+        response = self.fetch('/unsafe/filters:max_bytes(35000)/problematic.gif')
+        expect(response.code).to_equal(200)
+        expect(len(response.body)).to_be_lesser_or_equal_to(35000)
+        expect(response.body).to_be_similar_to(problematic_one_frame_image())
+
+    def test_max_bytes_gif_less_than_specified_amount(self):
+        response = self.fetch('/unsafe/filters:max_bytes(35000)/animated.gif')
+        expect(response.code).to_equal(200)
+        expect(len(response.body)).to_be_lesser_or_equal_to(35000)
+        expect(response.body).to_be_similar_to(animated_image())
 
     def test_meta_with_exif_orientation(self):
         response = self.fetch('/unsafe/meta/0x0/Giunchedi%2C_Filippo_January_2015_01-cmyk-orientation-exif.jpg')

@@ -90,6 +90,23 @@ class FiltersRunner:
             f.run(exec_one_filter)
         exec_one_filter()
 
+    def apply_max_bytes(self, phase, callback):
+        filters = self.filter_instances.get(phase, None)
+        if not filters:
+            callback()
+            return
+
+        def exec_one_filter():
+            if len(filters) == 0:
+                callback()
+                return
+
+            f = filters.pop(0)
+            if 'max_bytes' in dir(f):
+                f.run(exec_one_filter)
+            exec_one_filter()
+        exec_one_filter()
+
 
 class BaseFilter(object):
 
